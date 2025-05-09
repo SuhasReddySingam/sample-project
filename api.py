@@ -1,16 +1,18 @@
-from flask import Flask, request, jsonify
+from datetime import datetime
+from flask import Flask, Response, request, jsonify
 import torch
-from input.m import MoleculeEmbedder
-
+from m import MoleculeEmbedder
+from r import RNA_Processor
+from src.model import cross_attention
+from src.model.gnn_model_mole import GCNNet
+from src.model.gnn_model_rna import RNA_feature_extraction
+from src.model.transformer_encoder import transformer_1d
+from src.vocab import WordVocab
 from torch.utils.data import Dataset, DataLoader
 from torch_geometric.loader import DataLoader
 import torch.nn as nn
-import os
 
-from input.model import cross_attention, gnn_model_mole
-from input.model.gnn_model_rna import RNA_feature_extraction
-from input.model.transformer_encoder import transformer_1d
-from input.r import RNA_Processor
+
 hidden_dim = 128
 if torch.cuda.is_available():
    device = torch.device("cuda")
@@ -24,7 +26,7 @@ class DeepRSMA(nn.Module):
         super(DeepRSMA, self).__init__()
         hidden_dim = 128
         self.rna_graph_model = RNA_feature_extraction(hidden_dim)
-        self.mole_graph_model = gnn_model_mole(hidden_dim)
+        self.mole_graph_model = GCNNet(hidden_dim)
         self.mole_seq_model = transformer_1d(hidden_dim)
         self.cross_attention = cross_attention(hidden_dim)
         self.line1 = nn.Linear(hidden_dim*2, 1024)
@@ -113,7 +115,7 @@ except Exception as e:
     raise
 
 # Prediction endpoint
-@app.route('/predict', methods=['POST'])
+@app.route('/score', methods=['POST'])
 def predict():
     try:
         # Validate JSON input
@@ -154,6 +156,15 @@ def predict():
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Resource not found'}), 404
+
+@app.route('/health/<sample>', methods=['POST'])
+def samplescore(sample) -> Response:
+ 
+    if sample == "hi":
+        date=datetime.now().strftime("%H:%M:%S")
+        return f"Hello {date}"
+    else:
+        return jsonify({'error':"Unauthorized access"})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5060)

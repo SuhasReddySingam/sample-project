@@ -8,7 +8,7 @@ from datetime import datetime
 import sys
 
 class RNA_Processor:
-    def __init__(self, RNA_type="user", spot_rna2d_dir="src/input/SPOT-RNA-2D"):
+    def __init__(self, RNA_type="user", spot_rna2d_dir="src/SPOT-RNA-2D"):
         """
         Initialize RNA_Processor for single-sequence processing.
 

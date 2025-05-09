@@ -33,7 +33,7 @@ class SmilesAlphabet:
 smilebet = SmilesAlphabet()
 
 class MoleculeEmbedder:
-    def __init__(self, vocab_path='data/smiles_vocab.pkl'):
+    def __init__(self, vocab_path='src/smiles_vocab.pkl'):
         """Initialize with path to pre-trained SMILES vocabulary."""
         self.drug_vocab = WordVocab.load_vocab(vocab_path)
         self.max_len = max_len
