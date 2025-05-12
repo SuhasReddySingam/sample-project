@@ -1,8 +1,9 @@
 from datetime import datetime
+import pickle
 from flask import Flask, Response, request, jsonify
 import torch
-from m import MoleculeEmbedder
-from r import RNA_Processor
+from src.m import MoleculeEmbedder
+from src.r import RNA_Processor
 from src.model import cross_attention
 from src.model.gnn_model_mole import GCNNet
 from src.model.gnn_model_rna import RNA_feature_extraction
@@ -11,7 +12,6 @@ from src.vocab import WordVocab
 from torch.utils.data import Dataset, DataLoader
 from torch_geometric.loader import DataLoader
 import torch.nn as nn
-
 
 hidden_dim = 128
 if torch.cuda.is_available():
@@ -108,15 +108,18 @@ try:
     model_3.eval()
     model_4.eval()
     model_5.eval()
-    embedder = MoleculeEmbedder(vocab_path='data/smiles_vocab.pkl')
-    rna_processor = RNA_Processor()
 except Exception as e:
     print(f"Error loading model or processors: {e}")
     raise
 
+def get_embedder():
+    return MoleculeEmbedder(vocab_path='/usr/src/app/src/smiles_vocab.pkl')
+
 # Prediction endpoint
 @app.route('/score', methods=['POST'])
 def predict():
+    embedder = MoleculeEmbedder(vocab_path='/usr/src/app/src/smiles_vocab.pkl')
+    rna_processor = RNA_Processor()
     try:
         # Validate JSON input
         if not request.json or 'rna' not in request.json or 'molecule' not in request.json:

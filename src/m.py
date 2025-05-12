@@ -9,7 +9,7 @@ import numpy as np
 from .feature import atom_to_feature_vector, bond_to_feature_vector
 from torch_geometric.data import Data
 from .vocab import *
-
+from vocab import WordVocab
 # Constants
 max_len = 128
 atom_dict = {
@@ -33,7 +33,7 @@ class SmilesAlphabet:
 smilebet = SmilesAlphabet()
 
 class MoleculeEmbedder:
-    def __init__(self, vocab_path='src/smiles_vocab.pkl'):
+    def __init__(self, vocab_path='/usr/src/app/src/smiles_vocab.pkl'):
         """Initialize with path to pre-trained SMILES vocabulary."""
         self.drug_vocab = WordVocab.load_vocab(vocab_path)
         self.max_len = max_len
@@ -130,7 +130,7 @@ class MoleculeEmbedder:
 # Example usage
 if __name__ == "__main__":
     # Initialize the embedder
-    embedder = MoleculeEmbedder(vocab_path='data/smiles_vocab.pkl')
+    embedder = MoleculeEmbedder(vocab_path='/usr/src/app/src/smiles_vocab.pkl')
 
     # Example SMILES string
     smiles = "CCO"  # Ethanol

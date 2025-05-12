@@ -3,7 +3,14 @@ import sys
 import argparse
 import pickle
 from collections import Counter
+from pickle import Unpickler
 
+class CustomUnpickler(Unpickler):
+    def find_class(self, module, name):
+        if module == "__main__" and name == "WordVocab":
+            from src.vocab import WordVocab
+            return WordVocab
+        return super().find_class(module, name)
 
 class TorchVocab(object):
     """
@@ -25,23 +32,19 @@ class TorchVocab(object):
         min_freq = max(min_freq, 1)
 
         self.itos = list(specials)
-        #
         for tok in specials:
             del counter[tok]
 
         max_size = None if max_size is None else max_size + len(self.itos)
 
-        #
         words_and_frequencies = sorted(counter.items(), key=lambda tup: tup[0])
         words_and_frequencies.sort(key=lambda tup: tup[1], reverse=True)
         
-        #
         for word, freq in words_and_frequencies:
             if freq < min_freq or len(self.itos) == max_size:
                 break
             self.itos.append(word)
 
-        #
         self.stoi = {tok: i for i, tok in enumerate(self.itos)}
 
         self.vectors = None
@@ -74,7 +77,6 @@ class TorchVocab(object):
                 self.itos.append(w)
                 self.stoi[w] = len(self.itos) - 1
 
-
 class Vocab(TorchVocab):
     def __init__(self, counter, max_size=None, min_freq=1):
         self.pad_index = 0
@@ -84,23 +86,20 @@ class Vocab(TorchVocab):
         self.mask_index = 4
         super().__init__(counter, specials=["<pad>", "<unk>", "<eos>", "<sos>", "<mask>"], max_size=max_size, min_freq=min_freq)
 
-    # override用
     def to_seq(self, sentece, seq_len, with_eos=False, with_sos=False) -> list:
         pass
 
-    # override用
     def from_seq(self, seq, join=False, with_pad=False):
         pass
 
     @staticmethod
     def load_vocab(vocab_path: str) -> 'Vocab':
         with open(vocab_path, "rb") as f:
-            return pickle.load(f)
+            return CustomUnpickler(f).load()
 
     def save_vocab(self, vocab_path):
         with open(vocab_path, "wb") as f:
             pickle.dump(self, f)
-
 
 class WordVocab(Vocab):
     def __init__(self, texts, max_size=None, min_freq=1):
@@ -123,7 +122,7 @@ class WordVocab(Vocab):
         seq = [self.stoi.get(word, self.unk_index) for word in sentence]
 
         if with_eos:
-            seq += [self.eos_index]  # this would be index 1
+            seq += [self.eos_index]
         if with_sos:
             seq = [self.sos_index] + seq
 
@@ -150,20 +149,17 @@ class WordVocab(Vocab):
     @staticmethod
     def load_vocab(vocab_path: str) -> 'WordVocab':
         with open(vocab_path, "rb") as f:
-            return pickle.load(f)
-
+            return CustomUnpickler(f).load()
 
 def main():
     parser = argparse.ArgumentParser(description='Build a vocabulary pickle')
-    #parser.add_argument('--corpus_path', '-c', type=str, default='../data/chembl24_corpus.txt', help='path to th ecorpus')
-    #parser.add_argument('--out_path', '-o', type=str, default='../data/vocab.pkl', help='output file')
-    parser.add_argument('--corpus_path', '-c', type=str, default='../data/protein_corpus.txt', help='path to th ecorpus')
-    parser.add_argument('--out_path', '-o', type=str, default='../data/protein_vocab.pkl', help='output file')
+    parser.add_argument('--corpus_path', '-c', type=str, default='../data/chembl24_corpus.txt', help='path to the corpus')
+    parser.add_argument('--out_path', '-o', type=str, default='../data/vocab.pkl', help='output file')
     parser.add_argument('--min_freq', '-m', type=int, default=500, help='minimum frequency for vocabulary')
     parser.add_argument('--vocab_size', '-v', type=int, default=None, help='max vocabulary size')
     parser.add_argument('--encoding', '-e', type=str, default='utf-8', help='encoding of corpus')
     args = parser.parse_args()
-
+    
     with open(args.corpus_path, "r", encoding=args.encoding) as f:
         vocab = WordVocab(f, max_size=args.vocab_size, min_freq=args.min_freq)
 

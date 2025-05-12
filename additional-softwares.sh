@@ -18,3 +18,4 @@ pip install torch-scatter torch-sparse torch-cluster torch-spline-conv -f https:
 pip install rna-fm
 pip install rdkit
 pip install torch-geometric
+conda install -c bioconda viennarna

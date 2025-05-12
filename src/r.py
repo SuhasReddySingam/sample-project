@@ -6,9 +6,9 @@ import subprocess
 import fm  # RNA-FM module
 from datetime import datetime
 import sys
-
+import traceback
 class RNA_Processor:
-    def __init__(self, RNA_type="user", spot_rna2d_dir="src/SPOT-RNA-2D"):
+    def __init__(self, RNA_type="user", spot_rna2d_dir="/usr/src/app/src/SPOT-RNA-2D"):
         """
         Initialize RNA_Processor for single-sequence processing.
 
@@ -18,12 +18,12 @@ class RNA_Processor:
             spot_rna2d_dir (str): Path to SPOT-RNA-2D directory (default: correct path).
         """
         self.RNA_type = RNA_type
-        self.spot_rna2d_dir = os.path.abspath(spot_rna2d_dir)  # Normalize to absolute path
+        self.spot_rna2d_dir = "/usr/src/app/src/SPOT-RNA-2D"
 
 
         # Create directories for FASTA files and SPOT-RNA-2D outputs
-        self.fasta_dir = os.path.abspath(os.path.join(os.getcwd(), "fasta_files"))
-        self.output_dir = os.path.abspath(os.path.join(os.getcwd(), "spot_rna_outputs"))
+        self.fasta_dir = "/usr/src/app/src/fasta_files"
+        self.output_dir ="/usr/src/app/src/spot_rna_outputs"
         os.makedirs(self.fasta_dir, exist_ok=True)
         os.makedirs(self.output_dir, exist_ok=True)
 
@@ -99,20 +99,26 @@ class RNA_Processor:
             # Run SPOT-RNA-2D
             cmd = [
                 sys.executable,  # Use current Python executable
-                os.path.abspath(spot_rna2d_script),
+                "run.py",
                 "--rna_id", unique_id,
                 "--input_feats", os.path.abspath(self.fasta_dir),
                 "--outputs", os.path.abspath(self.output_dir),
                 "--single_seq", "1"
             ]
             print(f"Running SPOT-RNA-2D with command: {' '.join(cmd)}")
-            result = subprocess.run(
-                cmd,
-                cwd=self.spot_rna2d_dir,
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            try:   
+                result = subprocess.run(
+                    cmd,
+                    cwd=self.spot_rna2d_dir,
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+            except Exception as e:
+                error_trace = traceback.format_exc()
+                print("Error:",e)
+                print("Stack trace:\n", error_trace)
+
             print(f"SPOT-RNA-2D stdout: {result.stdout}")
             if result.returncode != 0:
                 print(f"SPOT-RNA-2D error: {result.stderr}")

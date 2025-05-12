@@ -17,6 +17,7 @@ from argparse import RawTextHelpFormatter
 base_path = os.path.dirname(os.path.realpath(__file__))
 
 parser = argparse.ArgumentParser()
+print("Parsing")
 parser.add_argument('--rna_id', default='', type=str, help='name of RNA sequence file; default = ''6p2h_A''\n', metavar='')
 parser.add_argument('--list_rna_ids', default='datasets/TS1_ids', type=str, help='file consists of list name of RNA sequence files for batch prediction; default = ''datasets/TS1_ids''\n', metavar='')
 parser.add_argument('--input_feats', default='input_features/', type=str, help='Path to directory consists of input features files with the same name as specified with --rna_id flag; default = ''inputs_features/''\n', metavar='')
@@ -25,7 +26,7 @@ parser.add_argument('--outputs',default='outputs/', type=str, help='Path to dire
 parser.add_argument('--gpu', default=-1, type=int, help='To run on GPU, specifiy GPU number. If only one GPU in computer specifiy 0; default = -1 (no GPU)\n', metavar='')
 parser.add_argument('--cpu',default=16, type=int, help='Specify number of cpu threads that program can use; default = 16\n', metavar='')
 args = parser.parse_args()
-
+print("Parsing done")
 
 if args.single_seq == 1:
     feat_mean = [0.24416392, 0.19836862, 0.30642843, 0.24948534, 0.24416392, 0.19836862, 0.30642843, 0.24948534, 0.004500812852233642]
@@ -38,7 +39,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 base_path = os.path.dirname(os.path.realpath(__file__))
-
+print("Reading RNA id")
 if args.rna_id:
     list_rna_ids = [args.rna_id]
 else:
@@ -96,11 +97,11 @@ def sigmoid(x):
 for MODEL in NUM_MODELS:
 
     if args.gpu==-1:
-            config = tf.ConfigProto(intra_op_parallelism_threads=args.cpu, inter_op_parallelism_threads=args.cpu)
+            config = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=args.cpu, inter_op_parallelism_threads=args.cpu)
     else:
-	    config = tf.compat.v1.ConfigProto()
-	    config.allow_soft_placement=True
-	    config.log_device_placement=False
+	        config = tf.compat.v1.ConfigProto()
+	        config.allow_soft_placement=True
+	        config.log_device_placement=False
         
     if args.single_seq == 1: print('\nPredicting for SPOT-RNA-2D-Single model')
     else: print('\nPredicting for SPOT-RNA-2D model '+str(MODEL))
